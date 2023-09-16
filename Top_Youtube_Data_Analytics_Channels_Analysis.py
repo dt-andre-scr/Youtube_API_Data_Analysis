@@ -1,8 +1,5 @@
-#!/usr/bin/env python
-# coding: utf-8
 
-# In[1]:
-
+#import packages and setting up API
 
 get_ipython().system('pip install --upgrade google-api-python-client')
 from googleapiclient.discovery import build
@@ -45,9 +42,6 @@ for item in response['items']:
 channel_ids
 
 
-# In[2]:
-
-
 #Request 2 and using channel_ids list as our search
 request2 = youtube.channels().list(
     part="snippet,statistics",
@@ -59,6 +53,7 @@ response2 = request2.execute()
 
 #creating all_data list to hold all data we are going to analyze
 #creating channel_checks to hold a dictionary of channel names from response2['items'] output
+
 all_data = []
 channel_checks = []
 
@@ -76,10 +71,8 @@ for item2 in response2['items']:
 all_data
 
 
-# In[3]:
-
-
 #creating channel_titles_check to parse out channel_checks dictionaries and capture the key from title['ChannelName'] in a list
+
 channel_titles_check = []
 
 for title in channel_checks:
@@ -88,95 +81,84 @@ for title in channel_checks:
 channel_titles_check
 
 
-# In[4]:
+#formatting data into dataframes
 
 
 titles_check1 = pd.DataFrame(channel_titles) #putting channel_titles from first response output in a dataframe
 titles_check2 = pd.DataFrame(channel_titles_check) #putting channel_titles_check from response2 output in a dataframe
 
 
-# In[5]:
+#creating final_check dataframe by doing a left join on titles_check1 & titles_check2 on the first column..
+#..to see if all results to verify response2 has an output for all correct titles from the output of the first response
 
-
-#creating final_check dataframe by doing a left join on titles_check1 & titles_check2 on the first column
-#--to see if all results to verify response2 has an output for all correct titles from the output of the first response
 final_check = pd.merge(titles_check1, titles_check2, on = [0], how = 'left')
 final_check
-#we confirmed that all_data contains information for all channels from the output of the first response
 
-
-# In[6]:
+#we confirmed that all_data contains information for all channels from the output of the first response.
 
 
 #contains all the dictionaries of information of each channel from the output of the first response and is the
-#--variable we will be using to start our analysis
+#..variable we will be using to start our analysis
+
 all_data
-#overriting variable all_data and putting it into a dataframe with the same name to view data in matrix form
+
+#overwriting variable all_data and putting it into a dataframe with the same name to view data in matrix form
 all_data = pd.DataFrame(all_data)
 all_data
 
-#can check for nulls as well if you'd like
+#--can check for nulls as well if you'd like
 
 
-# In[ ]:
-
+#checkpoint
 
 all_data.dtypes
 
 
-# In[7]:
-
-
 #pre-processing data, converting data types and cleaning up columns
+
 numeric_cols = ['Subscribers', 'TotalViews', 'TotalVideos']
 all_data[numeric_cols] = all_data[numeric_cols].apply(pd.to_numeric, errors = 'coerce', axis = 1)
 all_data['CreationDate'] = all_data['CreationDate'].str[0:10]
 all_data['CreationDate'] = pd.to_datetime(all_data['CreationDate'])
+
 #--if doing string for 'ChannelName', might need to explicitly call astype(str) before manipulating, force the str out
+
 all_data['ChannelAge'] = pd.Timestamp.now().normalize() - all_data['CreationDate']
 all_data
 
 
-# In[8]:
-
+#checkpoint
 
 all_data.dtypes
 
 
-# In[9]:
-
-
 #converting the number of days to an integer by chaning the data type to a str to be able to remove the
 #--days text and the converting the leftover numbers into int
+
 all_data['ChannelAgeDay'] = all_data['ChannelAge'].astype(str)
 all_data['ChannelAgeDayInt'] = all_data['ChannelAgeDay'].str.split(' ').str.get(0).astype(int)
-#all_data
 
+#checkpoint
 
-# In[12]:
+all_data
 
 
 #deleting not needed columns
+
 del all_data['CreationDate']
 del all_data['ChannelAge']
 del all_data['ChannelAgeDay']
 all_data
 
 
-# In[14]:
+#finalcheck
 
 
 all_data.dtypes
 
 
-# In[16]:
+#exporting dataframe as csv to your chosen path
 
 
 all_data.to_csv("insert_your_path")
-
-
-# In[ ]:
-
-
-
 
